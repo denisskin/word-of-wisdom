@@ -2,47 +2,49 @@ package wow
 
 import (
 	"errors"
+	"fmt"
 	"github.com/denisskin/word-of-wisdom/netstat"
+	"github.com/denisskin/word-of-wisdom/pow"
 	"log"
 	"net"
 	"time"
-
-	"github.com/denisskin/word-of-wisdom/pow"
 )
 
 // Server is "Word of Wisdom" tcp-server
 type Server struct {
 	db DB //
 
-	// moving average of request count
-	avgReq *netstat.MovingAverage
+	// anti-DDoS options
+	difficulty uint64 // minimal PoW Difficulty. (Number of hashes per request)
+	reqLimit   uint64 // income Requests Limit. (Allowed number of requests per second)
+
+	ma *netstat.MovingAverage // moving average of request count
 }
 
-// anti-DDOS params and limits
-const (
-	// allowed number of requests per second
-	limitRequests = 100
-
-	// minimum number of hashes per request
-	minDifficulty = 20e3
-)
-
 // StartServer creates and start "Word of Wisdom" server for givens tcp-address
-func StartServer(addr string) {
-	NewServer().Listen(addr)
+func StartServer(tcpPort uint, powDifficulty, requestsLimit uint64) {
+	addr := fmt.Sprintf(":%d", tcpPort)
+	NewServer(powDifficulty, requestsLimit).Listen(addr)
 }
 
 // NewServer makes new "Word of Wisdom" server
-func NewServer() *Server {
+func NewServer(difficulty, requestsLimit uint64) *Server {
+	if difficulty <= 0 {
+		difficulty = 10e3
+	}
 	return &Server{
-		db: newDB(),
-
-		avgReq: netstat.NewMovingAverage(time.Second, 15),
+		db:         newDB(),
+		difficulty: difficulty,
+		reqLimit:   requestsLimit,
+		ma:         netstat.NewMovingAverage(time.Second, 15),
 	}
 }
 
 // Listen announces on the local network address.
 func (s *Server) Listen(addr string) {
+
+	log.Printf("start server (PoW-difficulty:%d hash/sec; limit:%d reqs/sec).", s.difficulty, s.reqLimit)
+
 	listener, err := net.Listen("tcp", addr)
 	if err != nil {
 		log.Panic(err)
@@ -66,13 +68,13 @@ func (s *Server) handle(conn net.Conn) (err error) {
 	defer conn.Close()
 
 	addr := conn.RemoteAddr().String()
-	avgReq := s.avgReq.Add(1)
+	avgReq := s.ma.Add(1)
 
 	// calculate difficulty as function of actual average number of requests per second
-	// 		difficulty := ƒ(Avg-Requests)
-	difficulty := uint64(avgReq / limitRequests * minDifficulty)
-	if difficulty < minDifficulty {
-		difficulty = minDifficulty
+	// 		difficulty := ƒ(requestsPerSec)
+	difficulty := uint64(avgReq / float64(s.reqLimit) * float64(s.difficulty))
+	if difficulty < s.difficulty {
+		difficulty = s.difficulty
 	}
 	log.Printf("wow.Server> new request from [%s]. (avg-requests: %.1f/sec; difficulty: %d)", addr, avgReq, difficulty)
 
