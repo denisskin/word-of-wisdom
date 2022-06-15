@@ -5,4 +5,5 @@ WORKDIR /sources
 
 RUN go build -o /usr/local/bin/wow-client ./cmd/client/...
 
-CMD wow-client >/var/log/wow-client.log
+# Start test client, send 10K requests
+CMD wow-client -a 'host.docker.internal:8080' -n 10000

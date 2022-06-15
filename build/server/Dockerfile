@@ -7,4 +7,7 @@ RUN go build -o /usr/local/bin/wow-server ./cmd/server/...
 
 EXPOSE 8080
 
-CMD wow-server -r=10 >/var/log/wow-server.log
+# Start wow-server
+#   - set limit: 10 req/sec;
+#   - set min PoW difficulty: 20000 hashes/sec
+CMD wow-server -r 10  -d 20000
