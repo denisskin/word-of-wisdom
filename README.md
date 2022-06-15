@@ -2,7 +2,7 @@
 
 Test task for Server Engineer - Design and implement “Word of Wisdom” tcp server.  
 
-Simple "Word of Wisdom” TCP-server.  
+Simple "Word of Wisdom” TCP-server implementation.
 
 For each incoming request, generated and send to client a token with given accuracy (difficulty). 
 The client needs to find **nonce** such that the final hash will be with a given accuracy.
@@ -22,6 +22,7 @@ difficulty ~ averageCountOfRequests
 The difficulty increases proportionally as the number of requests increases.
 So difficulty limits the number of incoming requests.
 
+## Docker container 
 ### Build docker
 ```
 make
