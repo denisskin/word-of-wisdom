@@ -1,4 +1,4 @@
-package wow
+package netutils
 
 import (
 	"encoding/binary"
@@ -9,7 +9,7 @@ import (
 
 const tcpReadWriteTimeout = 15 * time.Second
 
-func writeBytes(conn net.Conn, data []byte) error {
+func WriteBytes(conn net.Conn, data []byte) error {
 	if err := conn.SetWriteDeadline(time.Now().Add(tcpReadWriteTimeout)); err != nil {
 		return err
 	}
@@ -20,7 +20,7 @@ func writeBytes(conn net.Conn, data []byte) error {
 	return err
 }
 
-func readBytes(conn net.Conn) (data []byte, err error) {
+func ReadBytes(conn net.Conn) (data []byte, err error) {
 	if err = conn.SetReadDeadline(time.Now().Add(tcpReadWriteTimeout)); err != nil {
 		return
 	}

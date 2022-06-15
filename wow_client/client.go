@@ -1,18 +1,18 @@
-package wow
+package wow_client
 
 import (
 	"errors"
+	"github.com/denisskin/word-of-wisdom/common/netutils"
+	"github.com/denisskin/word-of-wisdom/common/pow"
 	"net"
-
-	"github.com/denisskin/word-of-wisdom/pow"
 )
 
 type Client struct {
 	addr string
 }
 
-// NewClient returns new "Word of Wisdom" client
-func NewClient(addr string) *Client {
+// New returns new "Word of Wisdom" client
+func New(addr string) *Client {
 	return &Client{addr}
 }
 
@@ -25,12 +25,12 @@ func (c *Client) Get() (_ string, err error) {
 	defer conn.Close()
 
 	//--- 1. send request
-	if err = writeBytes(conn, []byte("GET")); err != nil {
+	if err = netutils.WriteBytes(conn, []byte("GET")); err != nil {
 		return
 	}
 
 	//--- 2. PoW-challenge. read token
-	token, err := readBytes(conn)
+	token, err := netutils.ReadBytes(conn)
 	if err != nil {
 		return
 	}
@@ -39,12 +39,12 @@ func (c *Client) Get() (_ string, err error) {
 	solution := pow.Solve(token)
 
 	//--- 4. send PoW-solution
-	if err = writeBytes(conn, solution); err != nil {
+	if err = netutils.WriteBytes(conn, solution); err != nil {
 		return
 	}
 
 	//--- 5. read final response
-	resp, err := readBytes(conn)
+	resp, err := netutils.ReadBytes(conn)
 	if err == nil && len(resp) == 0 {
 		err = errors.New("wow.Client: empty response")
 	}

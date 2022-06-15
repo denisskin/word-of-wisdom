@@ -1,4 +1,4 @@
-package wow
+package wow_server
 
 import (
 	"bytes"

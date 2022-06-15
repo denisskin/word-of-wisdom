@@ -1,10 +1,10 @@
-package wow
+package wow_server
 
 import (
 	"errors"
 	"fmt"
-	"github.com/denisskin/word-of-wisdom/netstat"
-	"github.com/denisskin/word-of-wisdom/pow"
+	"github.com/denisskin/word-of-wisdom/common/netutils"
+	"github.com/denisskin/word-of-wisdom/common/pow"
 	"log"
 	"net"
 	"time"
@@ -18,17 +18,17 @@ type Server struct {
 	difficulty uint64 // minimal PoW Difficulty. (Number of hashes per request)
 	reqLimit   uint64 // income Requests Limit. (Allowed number of requests per second)
 
-	ma *netstat.MovingAverage // moving average of request count
+	ma *netutils.MovingAverage // moving average of request count
 }
 
-// StartServer creates and start "Word of Wisdom" server for givens tcp-address
-func StartServer(tcpPort uint, powDifficulty, requestsLimit uint64) {
+// Start creates and start "Word of Wisdom" server for givens tcp-address
+func Start(tcpPort uint, powDifficulty, requestsLimit uint64) {
 	addr := fmt.Sprintf(":%d", tcpPort)
-	NewServer(powDifficulty, requestsLimit).Listen(addr)
+	New(powDifficulty, requestsLimit).Listen(addr)
 }
 
-// NewServer makes new "Word of Wisdom" server
-func NewServer(difficulty, requestsLimit uint64) *Server {
+// New makes new "Word of Wisdom" server
+func New(difficulty, requestsLimit uint64) *Server {
 	if difficulty <= 0 {
 		difficulty = 10e3
 	}
@@ -36,7 +36,7 @@ func NewServer(difficulty, requestsLimit uint64) *Server {
 		db:         newDB(),
 		difficulty: difficulty,
 		reqLimit:   requestsLimit,
-		ma:         netstat.NewMovingAverage(time.Second, 15),
+		ma:         netutils.NewMovingAverage(time.Second, 15),
 	}
 }
 
@@ -79,19 +79,19 @@ func (s *Server) handle(conn net.Conn) (err error) {
 	log.Printf("wow.Server> new request from [%s]. (avg-requests: %.1f/sec; difficulty: %d)", addr, avgReq, difficulty)
 
 	//-- 1. request service
-	_, err = readBytes(conn) // 'GET' - first hello-message
+	_, err = netutils.ReadBytes(conn) // 'GET' - first hello-message
 	if err != nil {
 		return
 	}
 
 	//-- 2. send challenge
 	token := pow.NewToken(difficulty)
-	if err = writeBytes(conn, token); err != nil {
+	if err = netutils.WriteBytes(conn, token); err != nil {
 		return
 	}
 
 	//-- 3. read proof
-	proof, err := readBytes(conn)
+	proof, err := netutils.ReadBytes(conn)
 	if err != nil {
 		return
 	}
@@ -104,5 +104,5 @@ func (s *Server) handle(conn net.Conn) (err error) {
 
 	//--- 5. send final response
 	resp := s.db.randomWisdom()
-	return writeBytes(conn, resp)
+	return netutils.WriteBytes(conn, resp)
 }

@@ -1,4 +1,4 @@
-package netstat
+package netutils
 
 import (
 	"sync"

@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	"github.com/denisskin/word-of-wisdom"
+	"github.com/denisskin/word-of-wisdom/wow_server"
 )
 
 var (
@@ -14,5 +14,5 @@ var (
 func main() {
 	flag.Parse()
 
-	wow.StartServer(*port, *difficulty, *limit)
+	wow_server.Start(*port, *difficulty, *limit)
 }

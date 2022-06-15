@@ -2,7 +2,7 @@ package main
 
 import (
 	"flag"
-	wow "github.com/denisskin/word-of-wisdom"
+	"github.com/denisskin/word-of-wisdom/wow_client"
 	"log"
 )
 
@@ -14,7 +14,7 @@ var (
 func main() {
 	flag.Parse()
 
-	client := wow.NewClient(*address)
+	client := wow_client.New(*address)
 	for i := 0; i < *nRequests; i++ {
 		if msg, err := client.Get(); err != nil {
 			log.Printf("ERROR: %v", err)
