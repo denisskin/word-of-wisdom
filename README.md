@@ -4,7 +4,7 @@ Test task for Server Engineer - Design and implement “Word of Wisdom” tcp se
 
 Simple "Word of Wisdom” TCP-server implementation.
 
-For each incoming request, generated and send to client a token with given accuracy (difficulty). 
+For each incoming request, generated and send to client a token with given accuracy (1/difficulty). 
 The client needs to find **nonce** such that the final hash will be with a given accuracy.
 
 ``` 
